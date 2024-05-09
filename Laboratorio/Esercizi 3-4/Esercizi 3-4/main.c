@@ -14,6 +14,8 @@ void ricerca()
     __asm
     {
         MOV ECX, Lunghezza
+        CMP ECX, 0
+        JE Fine // stringa vuota
         XOR EAX, EAX
         XOR EBX, EBX
         MOV BL, Carattere
