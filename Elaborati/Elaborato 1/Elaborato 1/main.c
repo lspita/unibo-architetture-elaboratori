@@ -22,6 +22,44 @@ void main() {
 
 	__asm
 	{
+		JMP _Main;					//	jump to Main()
+
+	_Swap:							//	Swap():
+
+	_Confronto:						//	Confronto():
+		XOR ECX, ECX;				//		ECX = 0
+	
+	_CicloStringa:					//		do:
+		MOV DL, [ESI][ECX];			//			DL = word1[ECX]
+		CMP DL, 0;					//			if DL == '\0':
+		JZ _CicloStringaEnd;		//				jump to CicloStringaEnd
+
+		MOV DH, [EDI][ECX];			//			DH = word2[ECX]
+
+	_CicloStringaEnd:				//	CicloStringaEnd:
+		CMP DL, DH;					//		do DL-DH, update flags
+		RET;
+
+	_Main:							//	Main():
+		XOR EAX, EAX;				//		EAX = 0
+		XOR EBX, EBX;				//		EBX = 0
+		XOR EDX, EDX;				//		EDX = 0
+
+		MOV EAX, num;				//		EAX = num (iterazioni)
+	_Ciclo_Iterazioni:				//		do:
+		MOV EBX, num;				//			EBX = num (confronti)
+		DEC EBX;					//			EBX-- (per andare da n-1 a 1)
+	
+	_Ciclo_Confronti:				//			do:
+		MOV ESI, strings[EBX*4];	//				ESI = (int)strings[EBX]	  (word1: strings[n-1..1])
+		MOV EDI, strings[EBX*4-4];	//				ESI = (int)strings[EBX-1] (word2: strings[n-2..0])
+		CALL _Confronto;			//				Confronto()
+		
+		DEC EBX;					//				EBX--
+		JNZ _Ciclo_Confronti;		//			while EBX > 0
+		
+		DEC EAX;					//			EAX--
+		JNZ _Ciclo_Iterazioni;		//		while EAX > 0
 	}
 
 	// Stampa su video
