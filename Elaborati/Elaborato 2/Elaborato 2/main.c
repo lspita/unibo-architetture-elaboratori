@@ -26,6 +26,25 @@ void main()
 
     __asm
     {
+                                    //  Reset registers
+        XOR EAX, EAX;               //  EAX = 0
+        XOR EBX, EBX;               //  EBX = 0
+        XOR ECX, ECX;               //  ECX = 0
+        XOR EDX, EDX;               //  EDX = 0
+
+                                    //  Calculate matrix total size
+        MOV EAX, m;                 //  EAX = m
+        MOV EBX, k;                 //  EBX = k
+        MUL EBX;                    //  EDX:EAX = m*k
+
+                                    //  Set result matrix to 0
+        MOV ECX, EAX;               //  ECX = EAX (EDX ignored because adresses indexes are 32bit max)
+    _ResetLoop:                     //  do:
+        MOV mat3[ECX*4-4], 0;       //      (int)mat3[ECX-1] = 0 (no xor because of memory access)
+        LOOP _ResetLoop;            //  ECX--; while ECX > 0
+        
+
+
     }
 
     // Stampa su video
