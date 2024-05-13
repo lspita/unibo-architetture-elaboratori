@@ -30,52 +30,46 @@ void main() {
 
 		MOV EAX, num;				//	EAX = num
 		CMP EAX, 1;					//	compare EAX, 1
-		JA _Sort;					//	if EAX > 1: Sort()
-		JMP _End;					//	else: END
+		JBE _End;					//	if EAX <= 1: END 
+
+	_Ciclo_Iterazioni:				//	do:
+		MOV EBX, num;				//		EBX = num
+		DEC EBX;					//		EBX-- (num-1..1)
 	
-									//	Confronto: Finchè non finisce la prima stringa, cicla carattere per carattere
-									//		- Se sono uguali, continua a ciclare
-									//		- Se sono diversi, fai la differenza (aggiornando i flag) e ritorna
-									// 
-	_Confronto:						//	Confronto(ESI=word1, EDI=word2):
-		XOR ECX, ECX;				//		ECX = 0
-									
-	_CicloStringa:					//		do:
-		MOV DL, [ESI][ECX];			//			DL = word1[ECX]
-		MOV DH, [EDI][ECX];			//			DH = word2[ECX]
-		INC ECX;					//			ECX++ (updated here to not interfere with flags after compares)
-
-		CMP DL, DH;					//			compare DL DH
-		JNE _ConfrontoRet;			//			if DL != DH: return
-		CMP DL, 0;					//			compare DL, 0
-		JE _ConfrontoRet;			//			if DL (== DH) == 0: return
+	_Ciclo_Confronti:				//		do:
+		MOV ESI, strings[EBX*4-4];	//			ESI = (int)strings[EBX-1] (word1: strings[num-2..0])
+		MOV EDI, strings[EBX*4];	//			EDI = (int)strings[EBX]	  (word2: strings[num-1..1])
 		
-		JMP _CicloStringa;			//		while (true)
+									//			# confronto: Finchè non finisce la prima stringa, cicla carattere per carattere
+									//			# - Se sono uguali, continua a ciclare
+									//			# - Se sono diversi, fai la differenza (aggiornando i flag) e ritorna
+									//  
+		XOR ECX, ECX;				//			ECX = 0
 
-	_ConfrontoRet:
-		RET;						// 
+	_CicloStringa:					//			do:
+		MOV DL, [ESI][ECX];			//				DL = word1[ECX]
+		MOV DH, [EDI][ECX];			//				DH = word2[ECX]
+		INC ECX;					//				ECX++ (updated here to not interfere with flags after compares)
 
-	_Sort:							//	Sort(EAX=num):
-	_Ciclo_Iterazioni:				//		do:
-		MOV EBX, num;				//			EBX = num
-		DEC EBX;					//			EBX-- (num-1..1)
-	
-	_Ciclo_Confronti:				//			do:
-		MOV ESI, strings[EBX*4-4];	//				ESI = (int)strings[EBX-1] (word1: strings[num-2..0])
-		MOV EDI, strings[EBX*4];	//				EDI = (int)strings[EBX]	  (word2: strings[num-1..1])
-		
-		CALL _Confronto;			//				Confronto()
-		JBE _NoSwap;				//				if word1 <= word2: skip swap
-									//				Swap:
-		MOV strings[EBX*4-4], EDI;	//				strings[num-2..0] = word2
-		MOV strings[EBX*4], ESI;	//				strings[num-1..1] = word1
+		CMP DL, DH;					//				compare DL, DH
+		JNE _ConfrontoEnd;			//				if DL != DH: return
+		CMP DL, 0;					//				compare DL, 0
+		JE _ConfrontoEnd;			//				if DL (== DH) == 0: return
+
+		JMP _CicloStringa;			//			while (true)
+
+	_ConfrontoEnd:
+		JBE _NoSwap;				//			if word1 <= word2: skip swap
+									//			# swap
+		MOV strings[EBX*4-4], EDI;	//			strings[num-2..0] = word2
+		MOV strings[EBX*4], ESI;	//			strings[num-1..1] = word1
 
 	_NoSwap:					
-		DEC EBX;					//				EBX--
-		JNZ _Ciclo_Confronti;		//			while EBX > 0
+		DEC EBX;					//			EBX--
+		JNZ _Ciclo_Confronti;		//		while EBX > 0
 		
-		DEC EAX;					//			EAX--
-		JNZ _Ciclo_Iterazioni;		//		while EAX > 0
+		DEC EAX;					//		EAX--
+		JNZ _Ciclo_Iterazioni;		//	while EAX > 0
 
 	_End:
 	}
