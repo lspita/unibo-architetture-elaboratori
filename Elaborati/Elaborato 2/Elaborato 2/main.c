@@ -31,6 +31,8 @@ void main()
         XOR EBX, EBX;               //  EBX = 0
         XOR ECX, ECX;               //  ECX = 0
         XOR EDX, EDX;               //  EDX = 0
+        XOR EDI, EDI;               //  EDI = 0
+        XOR ESI, ESI;               //  ESI = 0
                                     //  # calculate matrix total size
         MOV EAX, m;                 //  EAX = m
         MOV EBX, k;                 //  EBX = k
@@ -44,50 +46,73 @@ void main()
 
         MOV EAX, m;                 //  EAX = m
     _Loop1:                         //  do: # i1
-                                    
-        MOV EBP, EAX;               //      EBP = EAX # save original EAX value
-
-        MOV ESI, k;                 //      ESI = k # columns of (m,k)
-        LEA ESI, [ESI*2];           //      ESI = k * 2 # total i1 row size
-        MUL ESI;                    //      EDX:EAX = EAX * ESI # i1 row index offset
-        MOV ESI, EAX;               //      ESI = EAX # EDX discarded beacuse addresses are 32b
-
-        MOV EAX, EBP;               //      EAX = EBP # retrieve original value
         MOV EBX, k;                 //      EBX = k
     _Loop2:                         //      do: # i2
         MOV ECX, n;                 //          ECX = n
     _Loop3:                         //          do: # i3
-        MOV EBP, EAX;               //              EBP = EAX
 
-        MOV EDI, k;                 //              EDI = k # columns of (m,k)
-        LEA EDI, [EDI*2];           //              EDI = k * 2 # total i3 row size
-        
+                                    //              # push EAX
+        PUSH AX;                    //              push first half
+        ROL EAX, 16;                //              point second half
+        PUSH AX;                    //              push second half
+        ROL EAX, 16;                //              point first half
+
+        DEC EAX;                    //              EAX--; # [m-1..0][k]
+        MOV ESI, k;                 //              ESI = k
+        LEA ESI, [ESI*2];           //              ESI = k * 2 # total i1 row size
+        MUL ESI;                    //              EDX:EAX = EAX * ESI # i1 row index offset
+        MOV ESI, EAX;               //              ESI = EAX
+
+                                    //              # pop EAX
+        POP AX;                     //              pop second half
+        ROL EAX, 16;                //              move second half to correct position
+        POP AX;                     //              pop first half
+
+                                    //              # push EAX
+        PUSH AX;                    //              push first half
+        ROL EAX, 16;                //              point second half
+        PUSH AX;                    //              push second half
+        ROL EAX, 16;                //              point first half
+
+        DEC EAX;                    //              EAX--; # [m-1..0][n]
+        MOV EDI, n;                 //              EDI = n
+        LEA EDI, [EDI*2];           //              EDI = n * 2 # total i2 row size
+        MUL EDI;                    //              EDX:EAX = EAX * EDI # i2 row index offset
+        MOV EDI, EAX;               //              EDI = EAX
+
         MOV EAX, ECX;               //              EAX = ECX
-        MUL EDI;                    //              EDX:EAX = EAX * EDI # i3 row index offset
-        MOV EDI, EAX;               //              EDI = EAX # EDX discarded beacuse of max 32 bit addresses
-
-        XOR EAX, EAX;               //              EAX = 0
-                                    //              
+        DEC EAX;                    //              EAX-- # [n-1..0][k]
+        MOV EDX, k;                 //              EDX = k
+        LEA EDX, [EDX*2];           //              EDX = k * 2 # total i3 row size
+        MUL EDX;                    //              EDX:EAX = EAX * EDX # i3 row index offset
+        MOV EDX, EAX;               //              EDX = EAX
+   
                                     //              # Direct matrix indexing with registers gives C2404
                                     //              # MOV EAX, mat3[EBX][ECX*4]; # COMPILE ERROR
-        
-        LEA EDI, mat1[EDI];         //              EDI = &mat1[i3]
-        MOV AX, [EDI][EBX*2-2];     //              AX = EDI[i2]
 
-        LEA EDI, mat2[ESI];         //              EDI = &mat2[i1]
+        XOR EAX, EAX;               //              EAX = 0
+        
+        LEA EDX, mat2[EDX];         //              EDX = &mat2[i3]
+        MOV AX, [EDX][EBX*2-2];     //              AX = EDX[i2]
+
+        LEA EDI, mat1[EDI];         //              EDI = &mat1[i1]
         IMUL AX, [EDI][ECX*2-2];    //              EAX = AX * EDI[i3]
-        
-        LEA EDI, mat3[ESI];         //              EDI = &mat3[i1]
-        ADD [EDI][EBX*2-2], EAX;    //              EDI[i2] += EAX
+        MOVSX EAX, AX;              //              extend sign to 32bit
 
+        LEA ESI, mat3[ESI];         //              ESI = &mat3[i1]
+        ADD [ESI][EBX*2-2], EAX;    //              ESI[i2] += EAX
 
-        MOV EAX, EBP;               //              EAX = EBP
+                                    //              # pop EAX
+        POP AX;                     //              pop second half
+        ROL EAX, 16;                //              move second half to correct position
+        POP AX;                     //              pop first half
+
         DEC ECX;                    //              ECX--
         JNZ _Loop3;                 //          while ECX > 0
         DEC EBX;                    //          EBX--
-        JNZ _Loop3;                 //      while EBX > 0
+        JNZ _Loop2;                 //      while EBX > 0
         DEC EAX;                    //      EAX--
-        JNZ _Loop3;                 //  while EAX > 0
+        JNZ _Loop1;                 //  while EAX > 0
     }
 
     // Stampa su video
