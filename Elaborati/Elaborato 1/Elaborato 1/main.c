@@ -22,7 +22,7 @@ void main() {
 
 	__asm
 	{
-									//	Reset registers
+									//	# reset registers
 		XOR EAX, EAX;				//	EAX = 0
 		XOR EBX, EBX;				//	EBX = 0
 		XOR EDX, EDX;				//	ECX = 0
@@ -37,8 +37,8 @@ void main() {
 		DEC EBX;					//		EBX-- (num-1..1)
 	
 	_Ciclo_Confronti:				//		do:
-		MOV ESI, strings[EBX*4-4];	//			ESI = (int)strings[EBX-1] (word1: strings[num-2..0])
-		MOV EDI, strings[EBX*4];	//			EDI = (int)strings[EBX]	  (word2: strings[num-1..1])
+		MOV ESI, strings[EBX*4-4];	//			ESI = (int)strings[EBX-1] # word1: strings[num-2..0]
+		MOV EDI, strings[EBX*4];	//			EDI = (int)strings[EBX]	  # word2: strings[num-1..1]
 		
 									//			# confronto: Finchè non finisce la prima stringa, cicla carattere per carattere
 									//			# - Se sono uguali, continua a ciclare
@@ -49,7 +49,7 @@ void main() {
 	_CicloStringa:					//			do:
 		MOV DL, [ESI][ECX];			//				DL = word1[ECX]
 		MOV DH, [EDI][ECX];			//				DH = word2[ECX]
-		INC ECX;					//				ECX++ (updated here to not interfere with flags after compares)
+		INC ECX;					//				ECX++ # updated here to not interfere with flags after compares
 
 		CMP DL, DH;					//				compare DL, DH
 		JNE _ConfrontoEnd;			//				if DL != DH: return
