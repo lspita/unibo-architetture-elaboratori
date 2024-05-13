@@ -26,25 +26,84 @@ void main()
 
     __asm
     {
-                                    //  Reset registers
+                                    //  # reset registers
         XOR EAX, EAX;               //  EAX = 0
         XOR EBX, EBX;               //  EBX = 0
         XOR ECX, ECX;               //  ECX = 0
         XOR EDX, EDX;               //  EDX = 0
 
-                                    //  Calculate matrix total size
-        MOV EAX, m;                 //  EAX = m
-        MOV EBX, k;                 //  EBX = k
-        MUL EBX;                    //  EDX:EAX = m*k
+        JMP _MatrixMultiply;        // MatrixMultiply()
 
-                                    //  Set result matrix to 0
-        MOV ECX, EAX;               //  ECX = EAX (EDX ignored because adresses indexes are 32bit max)
-    _ResetLoop:                     //  do:
-        MOV mat3[ECX*4-4], 0;       //      (int)mat3[ECX-1] = 0 (no xor because of memory access)
-        LOOP _ResetLoop;            //  ECX--; while ECX > 0
+    _PushEAX:                       //  PushEAX()
+        PUSH AX;                    //      push first half
+        ROL EAX, 16;                //      point second half
+        PUSH AX;                    //      push second half
+        ROL EAX, 16;                //      point first half
+        RET;                        //      return
+
+    _PopEAX:                        //  PopEAX()
+        POP AX;                     //      pop second half
+        ROL EAX, 16;                //      move second half to correct position
+        POP AX;                     //      pop first half
+        RET;                        //      return
+
+    _MatrixMultiply:                //  MatrixMultiply()
+                                    //      # calculate matrix total size
+        MOV EAX, m;                 //      EAX = m
+        MOV EBX, k;                 //      EBX = k
+        MUL EBX;                    //      EDX:EAX = m*k
+
+                                    //      # set result matrix to 0
+        MOV ECX, EAX;               //      ECX = EAX # EDX discarded beacuse addresses are 32b
+    _ResetLoop:                     //      do:
+        MOV mat3[ECX*4-4], 0;       //          (int)mat3[ECX-1] = 0 # no xor because of memory access
+        LOOP _ResetLoop;            //      ECX--; while ECX > 0
+
+        MOV EAX, m;                 //      EAX = m
+    _Loop1:                         //      do: # i1
+        CALL _PushEAX;              //          PushEAX() # save original value
+
+        MOV ESI, k;                 //          ESI = k # columns of (m,k)
+        LEA ESI, [ESI*2];           //          ESI = k * 2 # total i1 row size
+        MUL ESI;                    //          EDX:EAX = EAX * ESI # i1 row index offset
+        MOV ESI, EAX;               //          ESI = EAX # EDX discarded beacuse addresses are 32b
+
+        CALL _PopEAX;               //          PopEAX() # retrieve original value
+        MOV EBX, k;                 //          EBX = k
+    _Loop2:                         //          do: # i2
+        MOV ECX, n;                 //              ECX = n
+    _Loop3:                         //              do: # i3
+        CALL _PushEAX;              //                  PushEAX() # save original
+
+        MOV EDI, k;                 //                  EDI = k # columns of (m,k)
+        LEA EDI, [EDI*2];           //                  EDI = k * 2 # total i3 row size
         
+        MOV EAX, ECX;               //                  EAX = ECX
+        MUL EDI;                    //                  EDX:EAX = EAX * EDI # i3 row index offset
+        MOV EDI, EAX;               //                  EDI = EAX # EDX discarded beacuse of max 32 bit addresses
+
+        XOR EAX, EAX;               //                  EAX = 0
+                                    //                  
+                                    //                  # Direct matrix indexing with registers gives C2404
+                                    //                  # MOV EAX, mat3[EBX][ECX*4]; # COMPILE ERROR
+        
+        LEA EDX, mat1[EDI];         //                  EDX = &mat1[i3]
+        MOV AX, [EDX][EBX*2];       //                  AX = EDX[i2]
+
+        LEA EDX, mat2[ESI];         //                  EDX = &mat2[i1]
+        IMUL AX, [EDX][ECX*2];      //                  EAX = AX * EDX[i3]
+        
+        LEA EDX, mat3[ESI];         //                  EDX = &mat3[i1]
+        ADD [EDX][EBX*2], EAX;      //                  EDX[i2] += EAX
 
 
+        CALL _PopEAX;               //                  PopEAX() # retrieve original
+        DEC ECX;                    //                  ECX--
+        JNZ _Loop3;                 //              while ECX > 0
+        DEC EBX;                    //              EBX--
+        JNZ _Loop3;                 //          while EBX > 0
+        DEC EAX;                    //          EAX--
+        JNZ _Loop3;                 //      while EAX > 0
     }
 
     // Stampa su video
