@@ -44,19 +44,20 @@ void main()
 
         MOV EAX, m;                 //  EAX = m
     _Loop1:                         //  do: # i1
-        MOV EBX, EAX;               //      PushEAX() # save original value
+                                    
+        MOV EBP, EAX;               //      EBP = EAX # save original EAX value
 
         MOV ESI, k;                 //      ESI = k # columns of (m,k)
         LEA ESI, [ESI*2];           //      ESI = k * 2 # total i1 row size
         MUL ESI;                    //      EDX:EAX = EAX * ESI # i1 row index offset
         MOV ESI, EAX;               //      ESI = EAX # EDX discarded beacuse addresses are 32b
 
-        MOV EAX, EBX;               //      PopEAX() # retrieve original value
+        MOV EAX, EBP;               //      EAX = EBP # retrieve original value
         MOV EBX, k;                 //      EBX = k
     _Loop2:                         //      do: # i2
         MOV ECX, n;                 //          ECX = n
     _Loop3:                         //          do: # i3
-        MOV EBX, EAX;               //              PushEAX() # save original
+        MOV EBP, EAX;               //              EBP = EAX
 
         MOV EDI, k;                 //              EDI = k # columns of (m,k)
         LEA EDI, [EDI*2];           //              EDI = k * 2 # total i3 row size
@@ -70,17 +71,17 @@ void main()
                                     //              # Direct matrix indexing with registers gives C2404
                                     //              # MOV EAX, mat3[EBX][ECX*4]; # COMPILE ERROR
         
-        LEA EDX, mat1[EDI];         //              EDX = &mat1[i3]
-        MOV AX, [EDX][EBX*2-2];     //              AX = EDX[i2]
+        LEA EDI, mat1[EDI];         //              EDI = &mat1[i3]
+        MOV AX, [EDI][EBX*2-2];     //              AX = EDI[i2]
 
-        LEA EDX, mat2[ESI];         //              EDX = &mat2[i1]
-        IMUL AX, [EDX][ECX*2-2];    //              EAX = AX * EDX[i3]
+        LEA EDI, mat2[ESI];         //              EDI = &mat2[i1]
+        IMUL AX, [EDI][ECX*2-2];    //              EAX = AX * EDI[i3]
         
-        LEA EDX, mat3[ESI];         //              EDX = &mat3[i1]
-        ADD [EDX][EBX*2-2], EAX;    //              EDX[i2] += EAX
+        LEA EDI, mat3[ESI];         //              EDI = &mat3[i1]
+        ADD [EDI][EBX*2-2], EAX;    //              EDI[i2] += EAX
 
 
-        MOV EAX, EBX;               //              PopEAX() # retrieve original
+        MOV EAX, EBP;               //              EAX = EBP
         DEC ECX;                    //              ECX--
         JNZ _Loop3;                 //          while ECX > 0
         DEC EBX;                    //          EBX--
