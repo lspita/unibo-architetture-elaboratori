@@ -41,12 +41,12 @@ void main()
         INC EDX;                //  EDX = n+1;
         MOV ECX, len;           //  ECX = len
     _MainLoop:                  //  do:
-        TEST BL, 10000000b;     //      check last bit of BL
+        TEST BL, 1;             //      check first bit of BL
         JZ _SkipIncrement;      //      if == 0: jump to SkipIncrement
         INC EAX;                //      EAX++;
     
     _SkipIncrement:             //      SkipIncrement:
-        SHL BL, 1;              //      BL << # point next bit
+        SHR BL, 1;              //      BL >> # point next bit
         DEC EDX;                //      EDX--;
         JNZ _SetPointer;        //      if EDX > 0: jump to SetPointer # skip CheckParity
     
