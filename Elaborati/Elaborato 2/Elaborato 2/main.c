@@ -95,9 +95,19 @@ void main()
         LEA EDX, mat2[EDX];         //              EDX = &mat2[i3]
         MOV AX, [EDX][EBX*2-2];     //              AX = EDX[i2]
 
+        PUSH BX;                    //              push BX # save original
+        PUSH DX;                    //              push DX # save original
+
         LEA EDI, mat1[EDI];         //              EDI = &mat1[i1]
-        IMUL AX, [EDI][ECX*2-2];    //              EAX = AX * EDI[i3]
-        MOVSX EAX, AX;              //              extend sign to 32bit
+        MOV BX, [EDI][ECX*2-2];     //              BX = EDI[i3]
+        IMUL BX;                    //              DX:AX = AX * BX
+
+        ROL EAX, 16;                //              EAX = AX:00
+        MOV AX, DX;                 //              EAX = AX:DX
+        ROL EAX, 16;                //              EAX = DX:AX
+
+        POP DX;                     //              pop DX # retrieve original
+        POP BX;                     //              pop BX # retrieve original
 
         LEA ESI, mat3[ESI];         //              ESI = &mat3[i1]
         ADD [ESI][EBX*4-4], EAX;    //              ESI[i2] += EAX
