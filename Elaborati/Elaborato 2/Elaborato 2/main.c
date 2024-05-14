@@ -100,7 +100,7 @@ void main()
         MOVSX EAX, AX;              //              extend sign to 32bit
 
         LEA ESI, mat3[ESI];         //              ESI = &mat3[i1]
-        ADD [ESI][EBX*2-2], EAX;    //              ESI[i2] += EAX
+        ADD [ESI][EBX*4-4], EAX;    //              ESI[i2] += EAX
 
                                     //              # pop EAX
         POP AX;                     //              pop second half
