@@ -41,7 +41,7 @@ void main()
                                     //  # set result matrix to 0
         MOV ECX, EAX;               //  ECX = EAX # EDX discarded beacuse addresses are 32b
     _ResetLoop:                     //  do:
-        MOV mat3[ECX*4-4], 0;       //      (int)mat3[ECX-1] = 0 # no xor because of memory access
+        MOV mat3[ECX*4-4], 0;       //      mat3[ECX-1] = 0 # no xor because of memory access
         LOOP _ResetLoop;            //  ECX--; while ECX > 0
 
         MOV EAX, m;                 //  EAX = m
@@ -59,7 +59,7 @@ void main()
 
         DEC EAX;                    //              EAX--; # [m-1..0][k]
         MOV ESI, k;                 //              ESI = k
-        LEA ESI, [ESI*2];           //              ESI = k * 2 # total i1 row size
+        LEA ESI, [ESI*4];           //              ESI = k * 2 # total i1 row size
         MUL ESI;                    //              EDX:EAX = EAX * ESI # i1 row index offset
         MOV ESI, EAX;               //              ESI = EAX
 
